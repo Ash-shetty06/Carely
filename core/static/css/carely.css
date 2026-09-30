@@ -1,0 +1,85 @@
+/* Small additions on top of Pico. Colours use Pico variables so dark mode works. */
+.brand { font-weight: 700; text-decoration: none; }
+.muted { color: var(--pico-muted-color); }
+form.inline { margin: 0; }
+button.small { padding: 0.3rem 0.8rem; font-size: 0.875rem; margin: 0; }
+.narrow { max-width: 28rem; margin-inline: auto; }
+footer { margin-top: 2rem; color: var(--pico-muted-color); }
+
+.flash { padding: 0.75rem 1rem; border-radius: var(--pico-border-radius); border-left: 4px solid; background: var(--pico-card-sectioning-background-color); }
+.flash-success { border-color: var(--pico-ins-color); }
+.flash-error { border-color: var(--pico-del-color); }
+
+.task-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.task-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1rem 0 0.5rem; }
+.task-actions button { margin: 0; font-size: 1.1rem; padding-block: 0.9rem; }
+
+.status { display: inline-block; white-space: nowrap; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; border: 1px solid currentColor; }
+.status-pending { color: var(--pico-muted-color); }
+.status-done { color: var(--pico-ins-color); }
+.status-skipped { color: var(--pico-color); }
+.status-missed { color: var(--pico-del-color); }
+.status-cancelled { color: var(--pico-muted-color); text-decoration: line-through; }
+
+tr.muted td { color: var(--pico-muted-color); }
+h3.day { margin: 1.5rem 0 0.5rem; font-size: 1rem; }
+td.time { width: 4rem; font-variant-numeric: tabular-nums; }
+
+.badge { display: inline-block; min-width: 1.4rem; padding: 0 0.45rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-align: center; background: var(--pico-del-color); color: var(--pico-background-color); }
+.page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.page-head hgroup, .page-head h1 { margin-bottom: 1rem; }
+.field-error { color: var(--pico-del-color); display: block; margin-top: -0.5rem; margin-bottom: 1rem; }
+.row-form { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.75rem; }
+.row-form input, .row-form button { width: auto; margin: 0; flex: 1 1 12rem; }
+.item-actions { display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap; }
+.item-actions a[role="button"] { padding: 0.3rem 0.8rem; font-size: 0.875rem; margin: 0; }
+.counts { margin-bottom: 0.5rem; }
+.tabs ul { gap: 0.5rem; }
+.tabs a[aria-current="page"] { font-weight: 700; text-decoration: underline; }
+.status-plan-draft { color: var(--pico-muted-color); }
+.status-plan-active { color: var(--pico-ins-color); }
+.status-plan-completed, .status-plan-cancelled { color: var(--pico-muted-color); }
+
+.tag { display: inline-block; padding: 0 0.5rem; border-radius: 999px; font-size: 0.8rem; border: 1px solid var(--pico-muted-border-color); color: var(--pico-muted-color); }
+.thread { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
+.bubble { max-width: 85%; padding: 0.6rem 0.9rem; border-radius: var(--pico-border-radius); background: var(--pico-card-background-color); border: 1px solid var(--pico-muted-border-color); }
+.bubble p { margin: 0.25rem 0; white-space: normal; overflow-wrap: anywhere; }
+.bubble.mine { align-self: flex-end; border-color: var(--pico-primary-border); }
+.bubble.theirs { align-self: flex-start; }
+.bubble .about { display: block; color: var(--pico-primary); }
+.hint { font-size: 0.9rem; color: var(--pico-muted-color); }
+.bubble form.inline { margin-top: 0.4rem; }
+
+/* Prescribed vs actual timeline */
+.timeline-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.timeline-head .row-form select { width: auto; margin: 0; }
+.timeline-scroll { overflow-x: auto; border: 1px solid var(--pico-muted-border-color); border-radius: var(--pico-border-radius); margin-bottom: 0.75rem; }
+table.timeline { margin: 0; font-size: 0.85rem; border-collapse: separate; border-spacing: 0; }
+table.timeline th, table.timeline td { padding: 0.35rem 0.3rem; text-align: center; white-space: nowrap; vertical-align: middle; }
+table.timeline thead th { font-weight: 600; line-height: 1.1; min-width: 2.1rem; }
+table.timeline .month { display: block; min-height: 1em; font-weight: 700; color: var(--pico-primary); }
+table.timeline th.sticky { position: sticky; left: 0; z-index: 1; text-align: left; white-space: normal; min-width: 13rem; max-width: 18rem; background: var(--pico-background-color); border-right: 1px solid var(--pico-muted-border-color); }
+table.timeline .summary { color: var(--pico-color); }
+table.timeline .today { background: var(--pico-primary-focus); }
+table.timeline tr.row-events th.sticky { font-weight: 400; }
+table.timeline td a { text-decoration: none; }
+.mk { display: inline-block; min-width: 0.9em; font-weight: 700; letter-spacing: 0.05em; }
+.mk-taken { color: var(--pico-ins-color); }
+.mk-skipped { color: #b7791f; }
+.mk-missed { color: var(--pico-del-color); }
+.mk-pending { color: var(--pico-muted-color); }
+.mk-booked { color: var(--pico-primary); }
+.mk-change { color: var(--pico-primary); }
+.mk-note { color: var(--pico-primary); }
+.mk-alert { color: var(--pico-del-color); }
+td .mk-missed { background: color-mix(in srgb, var(--pico-del-color) 15%, transparent); border-radius: 3px; }
+.legend { font-size: 0.85rem; line-height: 1.9; }
+.legend .mk { margin-left: 0.6rem; }
+@media (max-width: 576px) { table.timeline th.sticky { min-width: 9rem; max-width: 11rem; } }
+header nav { flex-wrap: wrap; }
+header nav ul { flex-wrap: wrap; }
+
+ul.coming { list-style: none; padding-left: 0; margin-bottom: 0.5rem; }
+ul.coming li { list-style: none; padding: 0.25rem 0; border-bottom: 1px solid var(--pico-muted-border-color); }
+ul.coming .time { display: inline-block; min-width: 7.5rem; color: var(--pico-muted-color); font-variant-numeric: tabular-nums; }
+ul.coming .coming-appointment, ul.coming .coming-lab { font-weight: 600; }

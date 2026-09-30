@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Messages · Carely{% endblock %}
+{% block content %}
+<h1>Messages</h1>
+<p><small class="muted">To start a conversation, open a patient and choose Messages.</small></p>
+<div class="overflow-auto">
+<table>
+  <thead><tr><th>Patient</th><th>Last message</th><th>When</th><th>Unread</th></tr></thead>
+  <tbody>
+  {% for patient in patients %}
+    <tr>
+      <td><a href="{% url 'staff_patient_messages' patient.pk %}">{{ patient.full_name }}</a></td>
+      <td><small>{{ patient.last_message_body|truncatechars:60 }}</small></td>
+      <td><small>{{ patient.last_message_at|date:"j M H:i" }}</small></td>
+      <td>{% if patient.unread %}<span class="badge">{{ patient.unread }}</span>{% else %}<span class="muted">0</span>{% endif %}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4">No conversations yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

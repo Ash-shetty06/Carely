@@ -1,0 +1,12 @@
+{% if form.non_field_errors %}<p class="flash flash-error" role="alert">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+{% for field in form %}
+  {% if field.is_hidden %}{{ field }}{% else %}
+    {% if field.widget_type == "checkbox" %}
+      <label>{{ field }} {{ field.label }}</label>
+    {% else %}
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+    {% endif %}
+    {% if field.errors %}<small class="field-error" role="alert">{{ field.errors|join:" " }}</small>{% elif field.help_text %}<small class="muted">{{ field.help_text }}</small>{% endif %}
+  {% endif %}
+{% endfor %}

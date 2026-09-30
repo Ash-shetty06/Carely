@@ -1,0 +1,48 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Carely{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'vendor/pico.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/carely.css' %}">
+</head>
+<body>
+  <header class="container">
+    <nav>
+      <ul><li><a href="{% url 'home' %}" class="brand">Carely</a></li></ul>
+      {% if user.is_authenticated %}
+      <ul>
+        {% if user.is_clinic_staff %}
+        <li><a href="{% url 'staff_patients' %}">Patients</a></li>
+        <li><a href="{% url 'staff_alerts' %}">Alerts{% if new_alert_count %} <span class="badge">{{ new_alert_count }}</span>{% endif %}</a></li>
+        <li><a href="{% url 'staff_messages' %}">Messages{% if unread_message_count %} <span class="badge">{{ unread_message_count }}</span>{% endif %}</a></li>
+        <li><a href="{% url 'staff_settings' %}">Settings</a></li>
+        {% elif user.is_patient %}
+        <li><a href="{% url 'today' %}">Today</a></li>
+        <li><a href="{% url 'my_plan' %}">My plan</a></li>
+        <li><a href="{% url 'health_notes' %}">Health notes</a></li>
+        <li><a href="{% url 'patient_messages' %}">Messages{% if unread_message_count %} <span class="badge">{{ unread_message_count }}</span>{% endif %}</a></li>
+        {% endif %}
+        <li><a href="{% url 'password_change' %}" title="Change password"><small>{{ user.full_name }}</small></a></li>
+        <li>
+          <form method="post" action="{% url 'logout' %}" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="secondary outline small">Log out</button>
+          </form>
+        </li>
+      </ul>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="container">
+    {% for message in messages %}
+      <p class="flash flash-{{ message.tags }}" role="status">{{ message }}</p>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="container">
+    <small>Carely records what was prescribed and what was done. It does not give medical advice. Contact your clinic with any concerns.</small>
+  </footer>
+</body>
+</html>

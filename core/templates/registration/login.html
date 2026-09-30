@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Log in · Carely{% endblock %}
+{% block content %}
+<article class="narrow">
+  <h1>Log in</h1>
+  {% if form.errors %}
+    <p class="flash flash-error" role="alert">
+      {% for error in form.non_field_errors %}{% if "locked" in error %}{{ error }}{% else %}Username or password is incorrect.{% endif %}{% empty %}Username or password is incorrect.{% endfor %}
+    </p>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <label>Username
+      <input type="text" name="username" autocomplete="username" autocapitalize="none" required autofocus value="{{ form.username.value|default:'' }}">
+    </label>
+    <label>Password
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit">Log in</button>
+  </form>
+</article>
+{% endblock %}

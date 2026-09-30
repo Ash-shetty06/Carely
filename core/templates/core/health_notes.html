@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Health notes · Carely{% endblock %}
+{% block content %}
+<h1>Health notes</h1>
+<p class="flash">Not for emergencies. If you feel very unwell, call the clinic or emergency services straight away.</p>
+
+<article>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "core/_form_fields.html" %}
+    <button type="submit">Send to clinic</button>
+  </form>
+</article>
+
+<h2>Your notes</h2>
+{% for note in notes %}
+  <article>
+    <header>
+      <small class="muted">
+        {{ note.created_at|date:"D j M Y, H:i" }}{% if note.treatment_day %} · Day {{ note.treatment_day }} of treatment{% endif %}
+      </small>
+    </header>
+    <p>{{ note.text|linebreaksbr }}</p>
+    {% if note.source_message %}<p><small class="muted">Added by the clinic from your message of {{ note.source_message.created_at|date:"j M H:i" }}</small></p>{% endif %}
+    {% if note.tags %}<p>{% for tag in note.tags %}<span class="tag">{{ tag }}</span> {% endfor %}</p>{% endif %}
+    <small class="muted">
+      {% with alert=note.alerts.all.0 %}
+        {% if alert and alert.status != "new" %}Seen by the clinic{% else %}Sent{% endif %}
+      {% endwith %}
+    </small>
+  </article>
+{% empty %}
+  <p class="muted">You haven't sent any notes yet.</p>
+{% endfor %}
+{% endblock %}

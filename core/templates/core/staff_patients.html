@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Patients · Carely{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Patients</h1>
+  <a href="{% url 'staff_add_patient' %}" role="button">Add patient</a>
+</div>
+<div class="overflow-auto">
+<table>
+  <thead><tr><th>Name</th><th>Care plan</th><th>Missed tasks</th><th>Open alerts</th></tr></thead>
+  <tbody>
+  {% for patient in patients %}
+    <tr>
+      <td><a href="{% url 'staff_patient_detail' patient.pk %}">{{ patient.full_name }}</a></td>
+      <td>{% if patient.has_active_plan %}Active{% else %}<span class="muted">None active</span>{% endif %}</td>
+      <td>{% if patient.missed_count %}<span class="status status-missed">{{ patient.missed_count }}</span>{% else %}0{% endif %}</td>
+      <td>{% if patient.open_alert_count %}<span class="status status-missed">{{ patient.open_alert_count }}</span>{% else %}0{% endif %}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4">No patients yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

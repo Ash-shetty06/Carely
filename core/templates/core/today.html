@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Today · Carely{% endblock %}
+{% block content %}
+<hgroup>
+  <h1>Today</h1>
+  <p>{{ today|date:"l, j F Y" }}</p>
+</hgroup>
+
+{% for task in tasks %}
+  <article class="task">
+    <div class="task-head">
+      <div>
+        <strong>{{ task.plan_item.name }}</strong>
+        <span class="muted">{{ task.plan_item.dose_text }}</span>
+        <br>
+        <small class="muted">Due {{ task.due_at|time:"H:i" }}{% if task.due_at|date:"Ymd" != today|date:"Ymd" %} yesterday{% endif %}</small>
+      </div>
+      {% include "core/_status.html" %}
+    </div>
+    {% if task.can_respond %}
+      <form method="post" action="{% url 'respond_to_task' task.pk %}" class="task-actions">
+        {% csrf_token %}
+        <button type="submit" name="action" value="taken" class="{% if task.status == 'skipped' %}outline{% endif %}">Taken</button>
+        <button type="submit" name="action" value="skipped" class="secondary {% if task.status != 'skipped' %}outline{% endif %}">Skipped</button>
+      </form>
+      {% if task.status != "pending" %}<small class="muted">You can change this until {{ task.respond_until|time:"H:i" }}.</small>{% endif %}
+    {% endif %}
+  </article>
+{% empty %}
+  <p>No medicines to take today.</p>
+{% endfor %}
+
+{% for appointment in todays_appointments %}
+  <article>
+    <strong>{{ appointment.plan_item.name }}</strong><br>
+    <small class="muted">Appointment today at {{ appointment.scheduled_at|time:"H:i" }}</small>
+  </article>
+{% endfor %}
+
+{% if lab_tests %}
+<h2>Lab reports to upload</h2>
+{% for task in lab_tests %}
+  <article class="task">
+    <div class="task-head">
+      <div>
+        <strong>{{ task.plan_item.name }}</strong><br>
+        <small class="muted">{% if task.status == "missed" %}Was due {{ task.due_at|date:"l j F" }}. Upload it if you have it.{% else %}Due {{ task.due_at|date:"l j F" }}{% endif %}</small>
+      </div>
+      {% include "core/_status.html" %}
+    </div>
+    <form method="post" action="{% url 'upload_report' task.pk %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <label>Upload report (PDF, JPG or PNG)
+        <input type="file" name="report" accept=".pdf,.jpg,.jpeg,.png" required>
+      </label>
+      <button type="submit" class="secondary">Upload</button>
+    </form>
+  </article>
+{% endfor %}
+{% endif %}
+
+<h2>Coming up</h2>
+{% for day, entries in coming_days %}
+  <h3 class="day">{{ day|date:"l j F" }}</h3>
+  <ul class="coming">
+    {% for entry in entries %}
+      <li class="coming-{{ entry.kind }}">
+        {% if entry.kind == "lab" %}<span class="time">By end of day</span>{% else %}<span class="time">{{ entry.at|time:"H:i" }}</span>{% endif %}
+        {{ entry.label }}
+      </li>
+    {% endfor %}
+  </ul>
+{% empty %}
+  <p class="muted">Nothing scheduled in the next {{ upcoming_days }} days.</p>
+{% endfor %}
+
+<p><a href="{% url 'my_plan' %}">See my full plan →</a></p>
+{% endblock %}

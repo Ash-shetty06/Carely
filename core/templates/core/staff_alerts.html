@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Alerts · Carely{% endblock %}
+{% block content %}
+<h1>Alerts</h1>
+<nav class="tabs">
+  <ul>
+    <li><a href="?show=open"{% if show == "open" %} aria-current="page"{% endif %}>Open</a></li>
+    <li><a href="?show=done"{% if show == "done" %} aria-current="page"{% endif %}>Acted on</a></li>
+  </ul>
+</nav>
+<div class="overflow-auto">
+<table>
+  <thead><tr><th>Patient</th><th>Alert</th><th>About</th><th>{% if show == "done" %}Acted on{% else %}Raised{% endif %}</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for alert in alerts %}
+    <tr>
+      <td>{{ alert.patient.full_name }}</td>
+      <td><a href="{% url 'staff_alert_detail' alert.pk %}">{{ alert.get_source_rule_display }}</a></td>
+      <td>{% if alert.task %}{{ alert.task.plan_item.name }} <small class="muted">{{ alert.task.due_at|date:"j M H:i" }}</small>
+          {% elif alert.health_note %}<small>"{{ alert.health_note.text|truncatechars:60 }}"</small>{% endif %}</td>
+      <td><small>{% if show == "done" %}{{ alert.acted_at|date:"j M H:i" }} by {{ alert.acted_by.full_name }}{% else %}{{ alert.created_at|date:"j M H:i" }}{% endif %}</small></td>
+      <td>{% if alert.status == "new" %}<span class="badge">New</span>{% else %}{{ alert.get_status_display|capfirst }}{% endif %}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5">{% if show == "done" %}No alerts acted on yet.{% else %}No open alerts.{% endif %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

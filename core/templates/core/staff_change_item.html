@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Change {{ item.name }} · Carely{% endblock %}
+{% block content %}
+<p><a href="{% url 'staff_care_plan' plan.pk %}">← Care plan #{{ plan.pk }}</a></p>
+<article class="narrow">
+  <hgroup>
+    <h1>Change {{ item.name }}</h1>
+    <p>{{ plan.patient.full_name }}</p>
+  </hgroup>
+  <p><small class="muted">Future pending tasks will be cancelled and recreated from the new details. Past tasks stay exactly as they are.</small></p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "core/_form_fields.html" %}
+    <button type="submit">Save change</button>
+  </form>
+</article>
+{% endblock %}

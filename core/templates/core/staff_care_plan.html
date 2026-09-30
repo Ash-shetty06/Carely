@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Care plan #{{ plan.pk }} · Carely{% endblock %}
+{% block content %}
+<p><a href="{% url 'staff_patient_detail' patient.pk %}">← {{ patient.full_name }}</a></p>
+<div class="page-head">
+  <hgroup>
+    <h1>Care plan #{{ plan.pk }}</h1>
+    <p>
+      {{ patient.full_name }} ·
+      <span class="status status-plan-{{ plan.status }}">{{ plan.get_status_display|capfirst }}</span>
+      {% if plan.reviewed_by_doctor %}· Reviewed by {{ plan.reviewed_by_doctor }} on {{ plan.reviewed_on|date:"j M Y" }}{% endif %}
+    </p>
+  </hgroup>
+  {% if is_draft or is_active %}
+  <form method="post" action="{% url 'staff_end_plan' plan.pk %}" class="inline"
+        onsubmit="return confirm('{% if is_draft %}Discard this draft?{% else %}End this care plan? All pending tasks will be cancelled.{% endif %}');">
+    {% csrf_token %}
+    <button type="submit" class="secondary outline">{% if is_draft %}Discard draft{% else %}End plan{% endif %}</button>
+  </form>
+  {% endif %}
+</div>
+
+{% if is_draft %}
+  <p class="flash">This plan is a draft. The patient sees nothing until it is reviewed and made live.</p>
+{% endif %}
+
+<h2>Items</h2>
+{% for item in current_items %}
+  <article class="item">
+    <div class="task-head">
+      <div>
+        <small class="muted">{{ item.get_type_display }}</small><br>
+        <strong>{{ item.name }}</strong>
+        {% if item.type == "medicine" %}
+          {{ item.dose_text }} at {{ item.dose_times|join:", " }}<br>
+          <small class="muted">{{ item.start_date|date:"j M Y" }} – {{ item.end_date|date:"j M Y" }}</small>
+        {% else %}
+          <br><small class="muted">{% if item.type == "lab_test" %}Due{% else %}Due by{% endif %} {{ item.start_date|date:"j M Y" }}</small>
+        {% endif %}
+        {% if item.replaces %}<br><small class="muted">Changed version (replaces the earlier one below)</small>{% endif %}
+        {% if item.notes %}<p><small>{{ item.notes|linebreaksbr }}</small></p>{% endif %}
+      </div>
+      {% if item.single_task %}{% include "core/_status.html" with task=item.single_task %}{% endif %}
+    </div>
+
+    {% if is_active and item.type == "medicine" %}
+      <p class="counts"><small>
+        Taken {{ item.status_counts.done|default:0 }} · Skipped {{ item.status_counts.skipped|default:0 }} ·
+        Missed {{ item.status_counts.missed|default:0 }} · Pending {{ item.status_counts.pending|default:0 }}
+      </small></p>
+    {% endif %}
+
+    {% if is_active and item.type == "lab_test" and item.single_task %}
+      {% with task=item.single_task %}
+        {% if task.lab_report %}<p><a href="{% url 'download_report' task.pk %}">View report</a> <small class="muted">uploaded {{ task.completed_at|date:"j M H:i" }}</small></p>{% endif %}
+        <form method="post" action="{% url 'upload_report' task.pk %}" enctype="multipart/form-data" class="row-form">
+          {% csrf_token %}
+          <input type="file" name="report" accept=".pdf,.jpg,.jpeg,.png" required aria-label="Lab report file">
+          <button type="submit" class="secondary">{% if task.lab_report %}Replace report{% else %}Upload report{% endif %}</button>
+        </form>
+      {% endwith %}
+    {% endif %}
+
+    {% if is_active and item.type == "follow_up" and item.single_task %}
+      {% with task=item.single_task appointment=item.appointment %}
+        {% if not appointment %}
+          {% if task.status == "pending" %}
+          <form method="post" action="{% url 'staff_book_appointment' task.pk %}" class="row-form">
+            {% csrf_token %}
+            <input type="datetime-local" name="scheduled_at" required aria-label="Appointment date and time">
+            <button type="submit">Book appointment</button>
+          </form>
+          {% endif %}
+        {% elif appointment.status == "booked" %}
+          <p>Appointment booked for <strong>{{ appointment.scheduled_at|date:"D j M Y, H:i" }}</strong></p>
+          <form method="post" action="{% url 'staff_update_appointment' appointment.pk %}" class="row-form">
+            {% csrf_token %}
+            <button type="submit" name="action" value="attended">Attended</button>
+            <button type="submit" name="action" value="not_attended" class="secondary">Not attended</button>
+          </form>
+          <details>
+            <summary>Reschedule</summary>
+            <form method="post" action="{% url 'staff_update_appointment' appointment.pk %}" class="row-form">
+              {% csrf_token %}
+              <input type="datetime-local" name="scheduled_at" required aria-label="New date and time" value="{{ appointment.scheduled_at|date:'Y-m-d\TH:i' }}">
+              <button type="submit" name="action" value="reschedule" class="secondary">Save new time</button>
+            </form>
+          </details>
+        {% else %}
+          <p><small>Appointment {{ appointment.scheduled_at|date:"D j M Y, H:i" }} · {{ appointment.get_status_display }}</small></p>
+        {% endif %}
+      {% endwith %}
+    {% endif %}
+
+    <div class="item-actions">
+      {% if is_draft %}
+        <form method="post" action="{% url 'staff_remove_item' item.pk %}" class="inline">
+          {% csrf_token %}
+          <button type="submit" class="secondary outline small">Remove</button>
+        </form>
+      {% elif is_active %}
+        <a href="{% url 'staff_change_item' item.pk %}" role="button" class="secondary outline small">Change</a>
+        <form method="post" action="{% url 'staff_stop_item' item.pk %}" class="inline"
+              onsubmit="return confirm('Stop {{ item.name|escapejs }}? Its future tasks will be cancelled.');">
+          {% csrf_token %}
+          <button type="submit" class="secondary outline small">Stop</button>
+        </form>
+      {% endif %}
+    </div>
+  </article>
+{% empty %}
+  <p class="muted">No items yet. Add a medicine, lab test or follow-up below.</p>
+{% endfor %}
+
+{% if is_draft or is_active %}
+<h2>Add an item</h2>
+{% for item_type, form in add_forms.items %}
+  <details{% if form.is_bound %} open{% endif %}>
+    <summary>{% if item_type == "medicine" %}Add medicine{% elif item_type == "lab_test" %}Add lab test{% else %}Add follow-up{% endif %}</summary>
+    <form method="post" action="{% url 'staff_add_item' plan.pk item_type %}" novalidate>
+      {% csrf_token %}
+      {% include "core/_form_fields.html" %}
+      <button type="submit">Add</button>
+      {% if is_active %}<small class="muted">Tasks are created for the patient straight away.</small>{% endif %}
+    </form>
+  </details>
+{% endfor %}
+{% endif %}
+
+{% if is_draft %}
+<h2>Doctor's review</h2>
+<article>
+  <form method="post" action="{% url 'staff_activate_plan' plan.pk %}" novalidate>
+    {% csrf_token %}
+    {% include "core/_form_fields.html" with form=review_form %}
+    <button type="submit">Make plan live</button>
+  </form>
+</article>
+{% endif %}
+
+{% if history_items %}
+<h2>Changed or stopped items</h2>
+<div class="overflow-auto">
+<table>
+  <tbody>
+  {% for item in history_items %}
+    <tr class="muted">
+      <td>{{ item.name }}</td>
+      <td>{% if item.type == "medicine" %}{{ item.dose_text }} at {{ item.dose_times|join:", " }}, {{ item.start_date|date:"j M" }} – {{ item.end_date|date:"j M" }}{% else %}Due {{ item.start_date|date:"j M" }}{% endif %}</td>
+      <td><small>{% if item.replaced_by.exists %}Changed{% else %}Stopped{% endif %} {{ item.superseded_at|date:"j M H:i" }}</small></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

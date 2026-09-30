@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ patient.full_name }} · Carely{% endblock %}
+{% block content %}
+<p><a href="{% url 'staff_patients' %}">← All patients</a></p>
+<div class="page-head">
+  <hgroup>
+    <h1>{{ patient.full_name }}</h1>
+    <p>Username: {{ patient.username }}{% if patient.must_change_password %} · <small>temporary password, not changed yet</small>{% endif %}</p>
+  </hgroup>
+  <div class="item-actions">
+    <a href="{% url 'staff_patient_messages' patient.pk %}" role="button" class="secondary outline">Messages</a>
+    <a href="{% url 'staff_reset_password' patient.pk %}" role="button" class="secondary outline">Reset password</a>
+    {% if can_start_plan %}
+    <form method="post" action="{% url 'staff_new_care_plan' patient.pk %}" class="inline">
+      {% csrf_token %}
+      <button type="submit">New care plan</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+{% if locked %}
+  <p class="flash flash-error" role="alert">This account is locked after too many failed logins (until {{ patient.locked_until|time:"H:i" }}). Resetting the password unlocks it.</p>
+{% endif %}
+
+{% if alerts %}
+<h2>Open alerts</h2>
+<ul>
+  {% for alert in alerts %}
+    <li><a href="{% url 'staff_alert_detail' alert.pk %}">{{ alert.get_source_rule_display }}</a>
+      {% if alert.task %}<span class="muted">· {{ alert.task.plan_item.name }}, {{ alert.task.due_at|date:"j M H:i" }}</span>
+      {% elif alert.health_note %}<span class="muted">· "{{ alert.health_note.text|truncatechars:50 }}"</span>{% endif %}
+      {% if alert.status == "new" %}<span class="badge">New</span>{% endif %}
+    </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<h2>Care plans</h2>
+{% for plan in plans %}
+  <p>
+    <a href="{% url 'staff_care_plan' plan.pk %}">Care plan #{{ plan.pk }}</a> ·
+    <span class="status status-plan-{{ plan.status }}">{{ plan.get_status_display|capfirst }}</span>
+    <small class="muted">
+      {% if plan.reviewed_by_doctor %}· Reviewed by {{ plan.reviewed_by_doctor }} on {{ plan.reviewed_on|date:"j M Y" }}{% endif %}
+      · created {{ plan.created_at|date:"j M Y" }}
+    </small>
+  </p>
+{% empty %}
+  <p class="muted">No care plans yet.</p>
+{% endfor %}
+
+<h2>Health notes</h2>
+{% for note in notes %}
+  <article>
+    <header><small class="muted">
+      {{ note.created_at|date:"D j M Y, H:i" }}{% if note.treatment_day %} · Day {{ note.treatment_day }}{% endif %}
+      {% if note.current_medicines %} · On: {{ note.current_medicines|join:", " }}{% endif %}
+    </small></header>
+    <p>{{ note.text|linebreaksbr }}</p>
+    {% if note.source_message %}<p><small class="muted">Saved from a message of {{ note.source_message.created_at|date:"j M H:i" }}</small></p>{% endif %}
+    {% if note.tags %}<p>{% for tag in note.tags %}<span class="tag">{{ tag }}</span> {% endfor %}</p>{% endif %}
+    {% if note.staff_outcome %}
+      <small><strong>Outcome:</strong> {{ note.staff_outcome }} <span class="muted">({{ note.outcome_by.full_name }}, {{ note.outcome_at|date:"j M H:i" }})</span></small>
+    {% else %}
+      {% with alert=note.alerts.all.0 %}{% if alert %}<small><a href="{% url 'staff_alert_detail' alert.pk %}">Record outcome</a></small>{% endif %}{% endwith %}
+    {% endif %}
+  </article>
+{% empty %}
+  <p class="muted">No health notes yet.</p>
+{% endfor %}
+
+<h2>Prescribed vs actual</h2>
+{% if timeline %}
+  {% include "core/_timeline.html" %}
+{% else %}
+  <p class="muted">The timeline appears once a care plan is live.</p>
+{% endif %}
+{% endblock %}

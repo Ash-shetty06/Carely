@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Settings · Carely{% endblock %}
+{% block content %}
+<article class="narrow">
+  <hgroup>
+    <h1>Clinic settings</h1>
+    <p>{{ clinic.name }} · times shown in {{ clinic.timezone }}</p>
+  </hgroup>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "core/_form_fields.html" %}
+    <button type="submit">Save settings</button>
+  </form>
+  <p><small class="muted">Changes apply from now on. Every change is recorded in the audit log.</small></p>
+</article>
+{% endblock %}

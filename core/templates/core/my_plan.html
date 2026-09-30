@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}My plan · Carely{% endblock %}
+{% block content %}
+<h1>My plan</h1>
+
+{% if not plan %}
+  <p>You don't have a care plan yet. The clinic will set it up after your visit.</p>
+{% else %}
+  <p>
+    {% if plan.status == "active" %}<span class="status status-plan-active">Current plan</span>{% else %}<span class="status status-plan-completed">Finished plan</span>{% endif %}
+    {% if timeline.days %}· {{ timeline.days.0|date:"j M" }} – {{ timeline.days|last|date:"j M Y" }}{% endif %}
+    <br><small class="muted">Reviewed by {{ plan.reviewed_by_doctor }} on {{ plan.reviewed_on|date:"j M Y" }}</small>
+  </p>
+
+  {% if medicines %}<h2>Medicines</h2>{% endif %}
+  {% for item in medicines %}
+    <article>
+      <strong>{{ item.name }}</strong> {{ item.dose_text }}<br>
+      <small>At {{ item.dose_times|join:", " }} · {{ item.start_date|date:"j M" }} – {{ item.end_date|date:"j M Y" }}</small>
+      {% if item.replaces %}<br><small class="muted">Changed on {{ item.created_at|date:"j M" }}</small>{% endif %}
+      {% if item.notes %}<p><small>{{ item.notes|linebreaksbr }}</small></p>{% endif %}
+    </article>
+  {% endfor %}
+
+  {% if lab_tests %}<h2>Lab tests</h2>{% endif %}
+  {% for item in lab_tests %}
+    <article>
+      <div class="task-head">
+        <div>
+          <strong>{{ item.name }}</strong><br>
+          <small>Due {{ item.start_date|date:"l j F" }}</small>
+        </div>
+        {% if item.task %}{% include "core/_status.html" with task=item.task %}{% endif %}
+      </div>
+      {% if item.task.lab_report %}<p><a href="{% url 'download_report' item.task.pk %}">View my report</a></p>{% endif %}
+    </article>
+  {% endfor %}
+
+  {% if follow_ups %}<h2>Follow-up visits</h2>{% endif %}
+  {% for item in follow_ups %}
+    <article>
+      <strong>{{ item.name }}</strong><br>
+      <small>
+        {% if item.appointment %}Appointment {{ item.appointment.scheduled_at|date:"l j F, H:i" }} · {{ item.appointment.get_status_display|capfirst }}
+        {% else %}Due by {{ item.start_date|date:"j F" }} · the clinic will book a time{% endif %}
+      </small>
+    </article>
+  {% endfor %}
+  {% if not medicines and not lab_tests and not follow_ups %}<p class="muted">Nothing is currently prescribed in this plan.</p>{% endif %}
+
+  {% if changed_items %}
+  <h2>Earlier versions and stopped items</h2>
+  <ul>
+    {% for item in changed_items %}
+      <li class="muted">
+        {{ item.name }}{% if item.type == "medicine" %} {{ item.dose_text }} at {{ item.dose_times|join:", " }}{% endif %}
+        · {% if item.replacement %}changed{% else %}stopped{% endif %} on {{ item.superseded_at|date:"j M" }}
+      </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <h2>My record</h2>
+  <p class="hint">What was planned for each day and what happened. Tap a mark for details.</p>
+  {% include "core/_timeline_grid.html" with patient_view=True %}
+{% endif %}
+
+{% if plans|length > 1 %}
+  <h2>All my plans</h2>
+  <ul>
+    {% for other in plans %}
+      <li>
+        {% if other.pk == plan.pk %}<strong>{% else %}<a href="?plan={{ other.pk }}">{% endif %}
+        {% if other.status == "active" %}Current plan{% else %}Plan{% endif %} started {{ other.activated_at|date:"j M Y" }}
+        {% if other.pk == plan.pk %}</strong> (showing){% else %}</a>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+{% endblock %}

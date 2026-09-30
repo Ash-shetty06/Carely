@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Messages · Carely{% endblock %}
+{% block content %}
+{% if user.is_clinic_staff %}
+  <p><a href="{% url 'staff_messages' %}">← All conversations</a></p>
+  <hgroup>
+    <h1>Messages</h1>
+    <p><a href="{% url 'staff_patient_detail' patient.pk %}">{{ patient.full_name }}</a></p>
+  </hgroup>
+{% else %}
+  <hgroup>
+    <h1>Messages</h1>
+    <p>Your conversation with the clinic</p>
+  </hgroup>
+  <p class="flash">Not for emergencies. If you feel very unwell, call the clinic or emergency services straight away.</p>
+  <p class="hint">Feeling unwell or noticing a side effect? <a href="{% url 'health_notes' %}">Write a health note</a> instead, so the clinic is alerted and it is kept with your treatment record.</p>
+{% endif %}
+
+<div class="thread">
+{% for message in thread %}
+  {% with from_staff=message.sender.is_clinic_staff %}
+  <div class="bubble {% if from_staff == user.is_clinic_staff %}mine{% else %}theirs{% endif %}">
+    <small class="muted">
+      {% if message.sender_id == user.pk %}You{% else %}{{ message.sender.full_name }}{% if from_staff %} · Clinic{% endif %}{% endif %}
+      · {{ message.created_at|date:"j M H:i" }}
+    </small>
+    {% if message.plan_item %}<small class="about">About: {{ message.plan_item.name }} {{ message.plan_item.dose_text }}</small>
+    {% elif message.appointment %}<small class="about">About: {{ message.appointment.plan_item.name }}, {{ message.appointment.scheduled_at|date:"j M H:i" }}</small>
+    {% elif message.health_note %}<small class="about">About: health note of {{ message.health_note.created_at|date:"j M H:i" }}</small>
+    {% endif %}
+    <p>{{ message.body|linebreaksbr }}</p>
+    {% if from_staff == user.is_clinic_staff %}<small class="muted">{% if message.read_at %}Read {{ message.read_at|date:"j M H:i" }}{% else %}Not read yet{% endif %}</small>{% endif %}
+    {% if user.is_clinic_staff and not from_staff %}
+      {% if message.converted_note %}
+        <small class="muted">Saved as a health note</small>
+      {% else %}
+        <form method="post" action="{% url 'staff_message_to_note' message.pk %}" class="inline"
+              onsubmit="return confirm('Save this message as a health note? It will go to the alert inbox for triage.');">
+          {% csrf_token %}
+          <button type="submit" class="secondary outline small">Turn into health note</button>
+        </form>
+      {% endif %}
+    {% endif %}
+  </div>
+  {% endwith %}
+{% empty %}
+  <p class="muted">No messages yet.</p>
+{% endfor %}
+</div>
+
+<article>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "core/_form_fields.html" %}
+    <button type="submit">Send</button>
+  </form>
+</article>
+{% endblock %}

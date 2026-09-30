@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Add patient · Carely{% endblock %}
+{% block content %}
+<p><a href="{% url 'staff_patients' %}">← All patients</a></p>
+<article class="narrow">
+  <h1>Add patient</h1>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "core/_form_fields.html" %}
+    <button type="submit">Add patient</button>
+  </form>
+</article>
+{% endblock %}

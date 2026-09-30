@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Tasks · {{ patient.full_name }} · Carely{% endblock %}
+{% block content %}
+<p><a href="{% url 'staff_patient_detail' patient.pk %}">← {{ patient.full_name }}</a></p>
+<h1>All tasks</h1>
+{% for day, day_tasks in days %}
+  <h3 class="day">{{ day|date:"D j M Y" }}</h3>
+  <div class="overflow-auto">
+  <table>
+    <tbody>
+    {% for task in day_tasks %}
+      <tr{% if task.status == "cancelled" %} class="muted"{% endif %}>
+        <td class="time">{{ task.due_at|time:"H:i" }}</td>
+        <td>{{ task.plan_item.name }} {% if task.plan_item.dose_text %}<small class="muted">{{ task.plan_item.dose_text }}</small>{% endif %}</td>
+        <td>{% include "core/_status.html" %}</td>
+        <td><small class="muted">
+          {% if task.lab_report %}<a href="{% url 'download_report' task.pk %}">Report</a> · {% endif %}
+          {% if task.completed_at %}{% if task.plan_item.type == "medicine" %}Tapped{% else %}Done{% endif %} {{ task.completed_at|date:"j M H:i" }}{% endif %}
+        </small></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+{% empty %}
+  <p class="muted">No tasks yet.</p>
+{% endfor %}
+{% endblock %}

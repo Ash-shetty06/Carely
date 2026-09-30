@@ -1,0 +1,20 @@
+<div class="timeline-head">
+  <p>
+    <a href="{% url 'staff_care_plan' timeline_plan.pk %}">Care plan #{{ timeline_plan.pk }}</a>
+    · {{ timeline_plan.get_status_display|capfirst }}
+    {% if timeline.days %}· {{ timeline.days.0|date:"j M" }} – {{ timeline.days|last|date:"j M Y" }}{% endif %}
+    · <a href="{% url 'staff_patient_tasks' patient.pk %}">All tasks</a>
+  </p>
+  {% if live_plans|length > 1 %}
+  <form method="get" class="row-form">
+    <select name="plan" aria-label="Choose care plan">
+      {% for plan in live_plans %}
+        <option value="{{ plan.pk }}"{% if plan.pk == timeline_plan.pk %} selected{% endif %}>Care plan #{{ plan.pk }} ({{ plan.get_status_display }})</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="secondary outline">Show</button>
+  </form>
+  {% endif %}
+</div>
+
+{% include "core/_timeline_grid.html" %}

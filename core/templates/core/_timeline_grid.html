@@ -1,0 +1,48 @@
+{% if timeline.truncated %}<p class="hint">This plan is long; the grid shows its first 180 days.</p>{% endif %}
+
+<div class="timeline-scroll">
+<table class="timeline">
+  <thead>
+    <tr>
+      <th class="sticky" scope="col">Prescribed</th>
+      {% for day, number in timeline.day_numbers %}
+        <th scope="col" class="{% if day == timeline.today %}today{% endif %}" title="{{ day|date:'l j F' }} · day {{ number }}">
+          <small class="month">{% if forloop.first or day.day == 1 %}{{ day|date:"M" }}{% endif %}</small>
+          {{ day|date:"j" }}<br><small class="muted">{{ day|date:"D"|slice:":2" }}</small>
+        </th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in timeline.rows %}
+      <tr class="row-{{ row.kind }}">
+        <th class="sticky" scope="row">
+          <strong>{{ row.label }}</strong>
+          {% if row.detail %}<br><small class="muted">{{ row.detail }}</small>{% endif %}
+          {% if row.summary %}<br><small class="summary">{{ row.summary }}</small>{% endif %}
+        </th>
+        {% for cell in row.cells %}
+          <td{% if forloop.counter0 == timeline.today_index %} class="today"{% endif %}>
+            {% for mark in cell %}{% if mark.url %}<a href="{{ mark.url }}">{% endif %}<span class="mk mk-{{ mark.css }}" title="{{ mark.title }}" role="img" aria-label="{{ mark.title }}">{{ mark.symbol }}</span>{% if mark.url %}</a>{% endif %}{% endfor %}
+          </td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<p class="legend">
+  <span class="mk mk-taken">✓</span> taken / done
+  <span class="mk mk-skipped">s</span> skipped
+  <span class="mk mk-missed">✗</span> missed
+  <span class="mk mk-pending">·</span> pending
+  <span class="mk mk-booked">◷</span> appointment booked
+  <span class="mk mk-change">▲</span> changed
+  <span class="mk mk-change">■</span> stopped
+  {% if not patient_view %}
+  <span class="mk mk-note">✎</span> health note
+  <span class="mk mk-alert">!</span> alert
+  {% endif %}
+  <br><small class="muted">Hover or tap a mark for details. Counts are a record of what happened, not a medical assessment.</small>
+</p>

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Alert · Carely{% endblock %}
+{% block content %}
+<p><a href="{% url 'staff_alerts' %}">← Alerts</a></p>
+<hgroup>
+  <h1>{{ alert.get_source_rule_display }}</h1>
+  <p>
+    <a href="{% url 'staff_patient_detail' alert.patient.pk %}">{{ alert.patient.full_name }}</a>
+    · raised {{ alert.created_at|date:"j M Y H:i" }} · {{ alert.get_status_display|capfirst }}
+  </p>
+</hgroup>
+
+{% if alert.task %}
+<article>
+  <header>
+    <strong>{{ alert.task.plan_item.name }}</strong> {{ alert.task.plan_item.dose_text }}
+    · <a href="{% url 'staff_care_plan' alert.task.plan_item.care_plan_id %}">Care plan #{{ alert.task.plan_item.care_plan_id }}</a>
+  </header>
+  {% if recent_tasks %}
+  <p><small class="muted">Most recent tasks up to this alert:</small></p>
+  <div class="overflow-auto">
+  <table>
+    <tbody>
+    {% for task in recent_tasks %}
+      <tr>
+        <td class="time">{{ task.due_at|date:"j M" }}</td>
+        <td class="time">{{ task.due_at|time:"H:i" }}</td>
+        <td>{% include "core/_status.html" %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% endif %}
+</article>
+{% endif %}
+
+{% if alert.health_note %}
+{% with note=alert.health_note %}
+<article>
+  <header><small class="muted">
+    Health note · {{ note.created_at|date:"D j M Y, H:i" }}{% if note.treatment_day %} · Day {{ note.treatment_day }} of treatment{% endif %}
+  </small></header>
+  <p>{{ note.text|linebreaksbr }}</p>
+  {% if note.source_message %}<p><small class="muted">Saved by staff from the patient's message of {{ note.source_message.created_at|date:"j M H:i" }}</small></p>{% endif %}
+  {% if note.tags %}<p>{% for tag in note.tags %}<span class="tag">{{ tag }}</span> {% endfor %}</p>{% endif %}
+  <small class="muted">Medicines at the time: {% if note.current_medicines %}{{ note.current_medicines|join:", " }}{% else %}none{% endif %}</small>
+  <p><a href="{% url 'staff_patient_messages' alert.patient.pk %}">Message {{ alert.patient.full_name }}</a></p>
+</article>
+{% endwith %}
+{% endif %}
+
+{% if alert.status == "acted_on" %}
+  <p><small class="muted">Acted on {{ alert.acted_at|date:"j M Y H:i" }} by {{ alert.acted_by.full_name }}. You can update the record below.</small></p>
+{% endif %}
+
+<article>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "core/_form_fields.html" %}
+    <button type="submit">{% if alert.status == "acted_on" %}Update outcome{% else %}Save outcome and close{% endif %}</button>
+  </form>
+</article>
+{% endblock %}

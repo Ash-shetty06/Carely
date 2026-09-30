@@ -1,0 +1,1 @@
+<span class="status status-{{ task.status }}">{% if task.status == "done" and task.plan_item.type == "medicine" %}Taken{% else %}{{ task.get_status_display|capfirst }}{% endif %}</span>
